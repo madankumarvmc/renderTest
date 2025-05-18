@@ -5,3 +5,4 @@ google-auth==2.29.0
 google-auth-httplib2==0.2.0
 openpyxl==3.1.2
 gunicorn==21.2.0
+flask-cors
