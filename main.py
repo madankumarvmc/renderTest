@@ -25,17 +25,30 @@ drive_service = build('drive', 'v3', credentials=creds)
 @app.route('/run', methods=['POST'])
 def run():
     data = request.get_json()
-    file_id = data.get('fileId')
+    folder_id = data.get('folderId')
+    file_name = data.get('fileName')
 
-    if not file_id:
-        return jsonify({'error': 'Missing fileId'}), 400
+    if not folder_id or not file_name:
+        return jsonify({'error': 'Missing folderId or fileName'}), 400
 
     try:
+        # Search for the file in the specified folder by name
+        query = f"'{folder_id}' in parents and name = '{file_name}' and trashed = false"
+        response = drive_service.files().list(q=query, fields="files(id, name)").execute()
+        files = response.get('files', [])
+
+        if not files:
+            return jsonify({'error': f"File '{file_name}' not found in folder."}), 404
+
+        file_id = files[0]['id']
+
+        # Download the file
         request_file = drive_service.files().get_media(fileId=file_id)
         fh = io.BytesIO()
         downloader = MediaIoBaseDownload(fh, request_file)
+
         done = False
-        while done is False:
+        while not done:
             status, done = downloader.next_chunk()
 
         fh.seek(0)
@@ -44,7 +57,7 @@ def run():
         print(df.head())
 
         return jsonify({'status': 'success', 'rows': len(df)})
-
+    
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
