@@ -69,7 +69,7 @@ def run():
 
         return jsonify({
             'status': 'success',
-            'rows': len(df),
+            'rows': len(pallet_capacity_df),
             **result  # merges outputFileId and outputFileName
 })
 
