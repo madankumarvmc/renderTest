@@ -88,33 +88,33 @@ def run():
     # # Here, you can implement your actual script logic (e.g., reading the file, etc.)
     # return jsonify({"status": "received", "fileId": file_id})
 
-@app.route('/upload', methods=['POST'])
-def upload_file_to_drive():
-    file = request.files.get("file")
-    folder_id = request.form.get("folderId")
-    file_name = request.form.get("fileName")
+# @app.route('/upload', methods=['POST'])
+# def upload_file_to_drive():
+#     file = request.files.get("file")
+#     folder_id = request.form.get("folderId")
+#     file_name = request.form.get("fileName")
 
-    if not file or not folder_id or not file_name:
-        return jsonify({"error": "Missing file, folderId, or fileName"}), 400
+#     if not file or not folder_id or not file_name:
+#         return jsonify({"error": "Missing file, folderId, or fileName"}), 400
 
-    try:
-        # Delete existing file with same name
-        query = f"'{folder_id}' in parents and name = '{file_name}' and trashed = false"
-        existing_files = drive_service.files().list(q=query, fields="files(id)").execute()
-        for f in existing_files.get("files", []):
-            drive_service.files().delete(fileId=f["id"]).execute()
+#     try:
+#         # Delete existing file with same name
+#         query = f"'{folder_id}' in parents and name = '{file_name}' and trashed = false"
+#         existing_files = drive_service.files().list(q=query, fields="files(id)").execute()
+#         for f in existing_files.get("files", []):
+#             drive_service.files().delete(fileId=f["id"]).execute()
 
-        # Upload new file
-        media = MediaIoBaseUpload(file.stream, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        uploaded = drive_service.files().create(
-            body={"name": file_name, "parents": [folder_id]},
-            media_body=media,
-            fields="id"
-        ).execute()
+#         # Upload new file
+#         media = MediaIoBaseUpload(file.stream, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+#         uploaded = drive_service.files().create(
+#             body={"name": file_name, "parents": [folder_id]},
+#             media_body=media,
+#             fields="id"
+#         ).execute()
 
-        return jsonify({"status": "uploaded", "fileId": uploaded["id"]})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+#         return jsonify({"status": "uploaded", "fileId": uploaded["id"]})
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5001)))
