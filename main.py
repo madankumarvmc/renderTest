@@ -8,6 +8,11 @@ from googleapiclient.http import MediaIoBaseDownload
 
 app = Flask(__name__)
 
+@app.route('/')
+def index():
+    return '✅ Flask is running. Use POST /run to trigger your script.'
+
+
 # Setup service account credentials
 SERVICE_ACCOUNT_FILE = 'service_account.json'
 SCOPES = ['https://www.googleapis.com/auth/drive']
