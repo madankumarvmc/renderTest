@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import pandas as pd
 import io
 import os
@@ -7,6 +8,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/')
 def index():
