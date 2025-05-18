@@ -1,35 +1,54 @@
-import tempfile
-import os
+# sheet_reader.py
+
 import pandas as pd
-from googleapiclient.http import MediaFileUpload
+import io
 
-def generate_and_upload_excel(df, folder_id, drive_service):
-    result_filename = "Pallet Best Fit Result.xlsx"
+def read_sheets(file_stream):
+    """Reads Pallet Size and Case Size sheets from an Excel file stream."""
+    dfs = pd.read_excel(file_stream, sheet_name=None)
 
-    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
-        df.to_excel(tmp.name, index=False)
-        tmp.flush()
-        tmp.seek(0)
+    pallet_df = dfs.get("Pallet Size")
+    case_df = dfs.get("Case Size")
 
-        # Upload the file to the same Google Drive folder
-        file_metadata = {
-            'name': result_filename,
-            'parents': [folder_id],
-            'mimeType': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        }
+    if pallet_df is None or case_df is None:
+        raise ValueError("Required sheet(s) missing: 'Pallet Size' or 'Case Size'")
 
-        media_body = MediaFileUpload(tmp.name, mimetype=file_metadata['mimeType'])
+    calculate_pallet_capacity(pallet_df, case_df)
 
-        uploaded_file = drive_service.files().create(
-            body=file_metadata,
-            media_body=media_body,
-            fields='id'
-        ).execute()
 
-    # Cleanup temp file
-    os.unlink(tmp.name)
+def calculate_pallet_capacity(pallet_df: pd.DataFrame, case_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculates how many cases of each SKU can fit on the given pallet (per layer),
+    trying both orientations (lengthwise and breadthwise).
+    """
+    if pallet_df.empty:
+        raise ValueError("Pallet DataFrame is empty")
 
-    return {
-        'outputFileId': uploaded_file['id'],
-        'outputFileName': result_filename
-    }
+    pallet_length = float(pallet_df.iloc[0]["Pallet Length (cm)"])
+    pallet_breadth = float(pallet_df.iloc[0]["Pallet Breadth (cm)"])
+
+    results = []
+
+    for _, row in case_df.iterrows():
+        sku = row["SKU Code"]
+        case_length = float(row["Case Lenght (cm)"])
+        case_breadth = float(row["Case Beradth (cm)"])
+
+        # Orientation 1
+        fit_len_1 = math.floor(pallet_length / case_length)
+        fit_brd_1 = math.floor(pallet_breadth / case_breadth)
+        capacity_1 = fit_len_1 * fit_brd_1
+
+        # Orientation 2
+        fit_len_2 = math.floor(pallet_length / case_breadth)
+        fit_brd_2 = math.floor(pallet_breadth / case_length)
+        capacity_2 = fit_len_2 * fit_brd_2
+
+        max_capacity = max(capacity_1, capacity_2)
+
+        results.append({
+            "SKU Code": sku,
+            "Pallet Capacity": max_capacity
+        })
+
+    return pd.DataFrame(results)
