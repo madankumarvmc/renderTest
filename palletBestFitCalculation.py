@@ -45,12 +45,12 @@ def capacity_calculation(pallet_df, case_df):
         if pd.isna(case_length) or pd.isna(case_breadth):
             raise ValueError(f"Missing length or breadth for SKU: {sku}")
 
-        # Orientation 1
+        # Orientation-1
         fit_len_1 = math.floor(pallet_length / case_length)
         fit_brd_1 = math.floor(pallet_breadth / case_breadth)
         capacity_1 = fit_len_1 * fit_brd_1
 
-        # Orientation 2
+        # Orientation-2
         fit_len_2 = math.floor(pallet_length / case_breadth)
         fit_brd_2 = math.floor(pallet_breadth / case_length)
         capacity_2 = fit_len_2 * fit_brd_2
