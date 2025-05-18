@@ -36,8 +36,14 @@ def capacity_calculation(pallet_df, case_df):
 
     for _, row in case_df.iterrows():
         sku = row["SKU Code"]
+
+        max_stacking_layers = float(row["Stacking Layer (Max)"])
+        
         case_length = float(row["Case Lenght (cm)"])
         case_breadth = float(row["Case Beradth (cm)"])
+
+        if pd.isna(case_length) or pd.isna(case_breadth):
+            raise ValueError(f"Missing length or breadth for SKU: {sku}")
 
         # Orientation 1
         fit_len_1 = math.floor(pallet_length / case_length)
@@ -51,9 +57,11 @@ def capacity_calculation(pallet_df, case_df):
 
         max_capacity = max(capacity_1, capacity_2)
 
+        pallet_capacity = max_capacity * max_stacking_layers
+
         results.append({
             "SKU Code": sku,
-            "Pallet Capacity": max_capacity
+            "Pallet Capacity": pallet_capacity
         })
 
     return pd.DataFrame(results)
