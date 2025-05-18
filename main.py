@@ -7,6 +7,8 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 
+from palletBestFitCalculation import generate_and_upload_excel
+
 app = Flask(__name__)
 CORS(app)
 
@@ -55,10 +57,14 @@ def run():
 
         fh.seek(0)
         df = pd.read_excel(fh)
-        print("Excel File Content:")
-        print(df.head())
+        result = generate_and_upload_excel(df, folder_id, drive_service)
 
-        return jsonify({'status': 'success', 'rows': len(df)})
+        return jsonify({
+            'status': 'success',
+            'rows': len(df),
+            **result  # merges outputFileId and outputFileName
+})
+
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
