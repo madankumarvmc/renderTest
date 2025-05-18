@@ -8,6 +8,8 @@ def pallet_capacity(file_stream):
     """Reads Pallet Size and Case Size sheets from an Excel file stream."""
     dfs = pd.read_excel(file_stream, sheet_name=None)
 
+    print("DEBUG Sheet names found:", list(dfs.keys()))  # Add this
+
     pallet_df = dfs.get("Pallet Size")
     case_df = dfs.get("Case Size")
 
